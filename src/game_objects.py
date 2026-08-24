@@ -1,7 +1,7 @@
 # Strap networks on them
 import pygame
 import numpy
-from src.defaults import DEFAULT_OBJECTS_COLOUR, DEFAULT_HIDDEN_COUNT, DEFAULT_TARGET_CONFIG
+from src.defaults import DEFAULT_OBJECTS_COLOUR, DEFAULT_HIDDEN_COUNT, DEFAULT_TARGET_CONFIG, DEFAULT_AI_MOVEMENT
 from src.networks import Base
 from src.functions import collision_check
 
@@ -21,10 +21,33 @@ class BaseObject:
     def __init__(self, height: int, width: int, min: int, max_x: int, max_y: int): # Min Max are just variables for the coordinates, going for the min=0 to the max=SCREEN_WIDTH/HEIGHT
         self.x = numpy.random.randint(min, max_x)
         self.y = numpy.random.randint(min, max_y)
+        self.max_x = max_x
+        self.max_y = max_y
         self.rect = pygame.Rect(self.x, self.y, width, height)
 
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(screen, (DEFAULT_OBJECTS_COLOUR), self.rect)
+
+    def check_wall_collision(self):
+
+        if self.x < 0:
+            self.x = self.max_x - self.rect.width
+            self.rect.x = self.x
+
+        elif self.x + self.rect.width > self.max_x:
+            self.x = 0
+            self.rect.x = self.x
+
+        if self.x < 0:
+            self.y = self.max_x - self.rect.height
+            self.rect.y = self.y
+
+        elif self.y + self.rect.height > self.max_y:
+            self.y = 0
+            self.rect.y = self.y
+        
+    def run(self, screen: pygame.Surface):
+        self.draw(screen=screen)
 
 class StrappedObject(BaseObject):
     def __init__(self, height: int, width: int, min: int, max_x: int, max_y: int, input_dim: int, hidden_dim: int, output_dim, hidden_count: int=DEFAULT_HIDDEN_COUNT):
@@ -35,23 +58,38 @@ class StrappedObject(BaseObject):
 
     def movement(self, targets):
 
-        new_targets = [target for target in targets if distance(target.x, self.x, target.y, self.y)]
-        state = numpy.array([self._calc_data(new_targets)])
-        logits = self.network(state)
-
-    def _calc_data(self, targets):
-
-        # if its 10 blocks close to any block, give a small +1 reward else 0
         self.previous_reward = self.current_reward
 
-        for target in targets:
+        new_targets = [target for target in targets if distance(target.x, self.x, target.y, self.y)]
+        state = numpy.array([self._calc_data()])
+        print(type(state))
+        print(state)
+        logits = self.network(state)
 
-            val = collision_check(target, self.rect)
-            if val == 0:
-                self.current_reward += 0.5
+        predicted_move = numpy.argmax(logits)
 
-            else:
-                self.current_reward = val
+        self.x, self.y = DEFAULT_AI_MOVEMENT[predicted_move]
+        self.rect.x, self.rect.y = self.x, self.y
 
+        if len(targets) != 0:
+            for target in targets:
         
-        return [self.x, self.y, self.previous_reward, self.current_reward]
+                val = collision_check(target, self.rect)
+                if val == 0:
+                    self.current_reward += 0.5
+
+                else:
+                    self.current_reward = val
+
+        else:
+            self.current_reward = 0
+
+        self.check_wall_collision()
+
+    def run(self, targets_array, screen: pygame.Surface):
+
+        self.movement(targets_array)
+        self.draw(screen=screen)
+        
+    def _calc_data(self):
+        return [self.x, self.y, self.previous_reward]

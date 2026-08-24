@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from src.defaults import DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH
+from src.game_objects import BaseObject
 import pygame
 
 @dataclass
@@ -12,10 +13,11 @@ class Screen:
 class Game:
     def __init__(self, screen_width, screen_height):
 
-        self.screen_handler = Screen(screen_width, screen_height)
+        self.screen_handler = Screen()
         self.run_loop = True
         self.clock = pygame.time.Clock()
-        self.objects_list: list= [] # Array for future objects to be spawned
+        self.objects_list: list = [] # Array for future objects to be spawned
+        self.targets_list: list = []
 
     # Have to run this method first before carrying on with the simulation
     def init_game(self, objects_array: list = [], fps: int = 60):
@@ -25,7 +27,8 @@ class Game:
         self.fps = fps
 
     def run(self, epochs: int = 100):
-     
+
+            self.count = 0
             for epoch in range(epochs):
                     
                 while self.run_loop:
@@ -36,9 +39,16 @@ class Game:
 
                     self.screen_handler.screen.fill((0, 0, 0))
 
+                    print(self.count)
+                    self.count += 1 
                     if len(self.objects_list) != 0:
-                        for object in self.objects_list:
-                            object.draw(self.screen_handler.screen)
+                        for obj in self.objects_list:
+
+                            if type(obj) != BaseObject:
+                                obj.run(self.targets_list, self.screen_handler.screen)
+                                continue
+
+                            obj.run(self.screen_handler.screen)
 
                     self.clock.tick(self.fps)
                     pygame.display.flip()

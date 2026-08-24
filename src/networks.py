@@ -1,19 +1,17 @@
 import numpy
 
-numpy.random.seed(42)
-
 class Linear:
     def __init__(self, in_features: int, out_features: int, activation_function: str = "s"):
         self.weights = numpy.random.uniform(-1, 1, (in_features, out_features))
         self.bias = numpy.zeros((out_features))
 
-    def forward(self, x):
-
+    def forward(self, x: numpy.ndarray):
+        
         output = x @ self.weights + self.bias
         return output
 
     def __call__(self, x):
-        self.forward(x)
+        return self.forward(x)
         
 class Base:
     def __init__(self, input_dim, hidden_dim, output_dim, hidden_count: int = 2):
