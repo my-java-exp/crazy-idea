@@ -12,14 +12,17 @@ def distance(x1, x2, y1, y2):
     return numpy.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 class Target(pygame.Rect):
-    def __init__(self, max_x, max_y):
+    def __init__(self, min_int, max_x, max_y):
 
         self.width = DEFAULT_TARGET_CONFIG["width"]
         self.height = DEFAULT_TARGET_CONFIG["height"]
 
-        self.x = random.randrange(min, max_x)
-        self.y = random.randrange(min, max_y)
+        self.x = random.randrange(min_int, max_x)
+        self.y = random.randrange(min_int, max_y)
 
+    def draw(self, screen: pygame.Surface):
+        pygame.draw.rect(screen, DEFAULT_TARGET_CONFIG["colour"], self)
+    
 class BaseObject:
     def __init__(self, height: int, width: int, min_int: int, max_x: int, max_y: int): # Min Max are just variables for the coordinates, going for the min=0 to the max=SCREEN_WIDTH/HEIGHT
         self.x = random.randrange(min_int, max_x)
@@ -80,6 +83,7 @@ class UserObject(BaseObject):
         self.rect.y = self.y
         self.rect.x = self.x
 
+
     def check_obj_collision(self, collide_list):
 
         collide_list = self.rect.collidelist(collide_list)
@@ -102,12 +106,16 @@ class StrappedObject(BaseObject):
         self.previous_reward = 0
         self.current_reward = 0
 
-    def movement(self, targets):
+        self.collected_rewards = 0
+
+    def movement(self, targets: list[Target]):
 
         self.previous_reward = self.current_reward
 
-        new_targets = [target for target in targets if distance(target.x, self.x, target.y, self.y)]
+        new_targets_dict = [{idx: target} for idx, target in enumerate(targets) if distance(target.x, self.x, target.y, self.y)]
+        new_targets = []
         state = numpy.array([self._calc_data()])
+
         logits = self.network(state)
 
         predicted_move = numpy.argmax(logits)
@@ -115,12 +123,15 @@ class StrappedObject(BaseObject):
         self.x += DEFAULT_AI_MOVEMENT.get(predicted_move, 0)[0]
         self.y += DEFAULT_AI_MOVEMENT.get(predicted_move, 0)[1]
 
+        count = 0
+
         if len(new_targets) != 0:
-            for target in new_targets:
+            for idx, target in enumerate(new_targets):
         
-                val = collision_check(target, self.rect)
+                val = collision_check(target.key(), self.rect)
                 if val == 0:
                     self.current_reward += 0.5
+                    targets[new_targets[idx][target]] = 0
 
                 else:
                     self.current_reward = val
@@ -128,8 +139,11 @@ class StrappedObject(BaseObject):
         else:
             self.current_reward = 0
 
+        self.collected_rewards += self.current_reward
+
         self.rect.x = self.x
         self.rect.y = self.y
+    
     def run(self, targets_array, screen: pygame.Surface):
 
         self.movement(targets_array)

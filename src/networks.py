@@ -1,5 +1,10 @@
 import numpy
 
+def softmax(z):
+
+    exp_z = numpy.exp(z - numpy.max(z, axis=1, keepdims=True))
+    return exp_z/numpy.sum(exp_z, axis=1, keepdims=True)
+
 class Linear:
     def __init__(self, in_features: int, out_features: int, activation_function: str = "s"):
         self.weights = numpy.random.uniform(-1, 1, (in_features, out_features))
@@ -25,8 +30,8 @@ class Base:
 
             current_input = layer(current_input)
 
-        logits = current_input
+        logits = softmax(current_input)
         return logits
 
     def __call__(self, x):
-        self.forward(x)
+        return self.forward(x)
