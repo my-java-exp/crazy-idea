@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from src.defaults import DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH
-from src.game_objects import BaseObject
+from src.game_objects import StrappedObject
 import pygame
 
 @dataclass
@@ -38,17 +38,15 @@ class Game:
                             self.run_loop = False # Exiting when wanting to exit
 
                     self.screen_handler.screen.fill((0, 0, 0))
-
-                    print(self.count)
-                    self.count += 1 
+                    
                     if len(self.objects_list) != 0:
                         for obj in self.objects_list:
 
-                            if type(obj) != BaseObject:
+                            if type(obj) != StrappedObject:
+                                obj.run(self.screen_handler.screen)
+                            else:
                                 obj.run(self.targets_list, self.screen_handler.screen)
-                                continue
-
-                            obj.run(self.screen_handler.screen)
+                            
 
                     self.clock.tick(self.fps)
                     pygame.display.flip()
