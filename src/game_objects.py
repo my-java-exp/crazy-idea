@@ -112,8 +112,18 @@ class StrappedObject(BaseObject):
 
         self.previous_reward = self.current_reward
 
-        new_targets_dict = [{idx: target} for idx, target in enumerate(targets) if distance(target.x, self.x, target.y, self.y)]
-        new_targets = []
+        new_targets_dict: dict[int, Target] = {}
+        new_targets_indexes: list[int] = []
+
+        for idx, target in enumerate(targets):
+
+            if type(target) == int:
+                continue
+
+            if distance(target.x, self.x, target.y, self.y) <= 10:
+                new_targets_dict[idx] = target
+                new_targets_indexes.append(idx)
+
         state = numpy.array([self._calc_data()])
 
         logits = self.network(state)
@@ -123,18 +133,17 @@ class StrappedObject(BaseObject):
         self.x += DEFAULT_AI_MOVEMENT.get(predicted_move, 0)[0]
         self.y += DEFAULT_AI_MOVEMENT.get(predicted_move, 0)[1]
 
-        count = 0
-
-        if len(new_targets) != 0:
-            for idx, target in enumerate(new_targets):
+        if len(new_targets_indexes) != 0:
+            for idx in new_targets_indexes:
         
-                val = collision_check(target.key(), self.rect)
+                val = collision_check(new_targets_dict[idx], self.rect)
+                
                 if val == 0:
                     self.current_reward += 0.5
-                    targets[new_targets[idx][target]] = 0
-
+                    
                 else:
                     self.current_reward = val
+                    targets[idx] = 0
 
         else:
             self.current_reward = 0

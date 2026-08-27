@@ -44,6 +44,8 @@ class Game:
 
                     self.screen_handler.screen.fill((0, 0, 0))
 
+                    print(self.targets_list)
+
                     if len(self.targets_list) != 0:
                         for target in self.targets_list:
                             if type(target) == int:
@@ -65,9 +67,6 @@ class Game:
                     pygame.display.flip()
 
                     self.count += 1
-
-            
-                print("Epoch: ", epoch)
 
                 if not self.run_loop and self.count <= DEFAULT_TIME_LIMIT:
                     break

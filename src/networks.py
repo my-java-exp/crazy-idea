@@ -21,6 +21,7 @@ class Linear:
 class Base:
     def __init__(self, input_dim, hidden_dim, output_dim, hidden_count: int = 2):
         self.layers = [Linear(input_dim, hidden_dim)] + [Linear(hidden_dim, hidden_dim) for _ in range(hidden_count)] + [Linear(hidden_dim, output_dim)]
+        self.weights = [net.weights for net in self.layers]
 
     def forward(self, x):
 
@@ -33,5 +34,7 @@ class Base:
         logits = softmax(current_input)
         return logits
 
+    def split_half(self): ...
+    
     def __call__(self, x):
         return self.forward(x)

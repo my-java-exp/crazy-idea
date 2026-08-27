@@ -4,10 +4,11 @@ DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT = 500, 500
 DEFAULT_REWARD = 5
 DEFAULT_AI_POPULATION = 5
 DEFAULT_TARGET_COUNT = 16
+DEFAULT_K = 2
 
 DEFAULT_TARGET_CONFIG = {
-    "width": 50,
-    "height": 50,
+    "width": 10,
+    "height": 10,
     "colour": (90, 23, 1)
 }
 
